@@ -1,11 +1,12 @@
 #include <lvgl.h>
 #include <LovyanGFX.hpp>
+#include "display_config.h"
 
 class LGFX : public lgfx::LGFX_Device
 {
 
   lgfx::Panel_GC9A01 _panel_instance;
-  //lgfx::Light_PWM     _light_instance;
+  lgfx::Light_PWM     _light_instance;
   lgfx::Bus_SPI _bus_instance;
 
 public:
@@ -32,7 +33,7 @@ public:
     {                                     
       auto cfg = _panel_instance.config(); 
 
-      cfg.pin_cs = 10;
+      cfg.pin_cs = CS_PIN;
       cfg.pin_rst = -1;  //Disabled
       cfg.pin_busy = -1; //Disabled
 
@@ -54,14 +55,18 @@ public:
       _panel_instance.config(cfg);
     }
 
+    {                                      // Set backlight control. (delete if not necessary)
+      auto cfg = _light_instance.config(); // Get the structure for backlight configuration.
+
+      cfg.pin_bl = BACKLIGHT_PIN;     // pin number to which the backlight is connected
+      cfg.invert = false;  // true to invert backlight brightness
+      cfg.freq = 44100;    // backlight PWM frequency
+      cfg.pwm_channel = 1; // PWM channel number to use
+
+      _light_instance.config(cfg);
+      _panel_instance.setLight(&_light_instance); // Sets the backlight to the panel.
+    }
+
     setPanel(&_panel_instance);
-    // auto cfg = _light_instance.config();
-    // cfg.pin_bl = 8;
-    // cfg.invert = false;
-    // cfg.freq   = 1;
-    // cfg.pwm_channel = 7;
-    // _light_instance.config(cfg);
-    // _panel_instance.setLight(&_light_instance);
-  
   }
 };

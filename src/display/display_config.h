@@ -8,3 +8,6 @@ static const uint32_t screenHeight = 240;
 #define I2C_SCL 5
 #define TP_INT 0
 #define TP_RST 1
+
+#define CS_PIN 10
+#define BACKLIGHT_PIN 3

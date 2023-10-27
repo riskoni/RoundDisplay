@@ -16,10 +16,16 @@ static CST816D touch(I2C_SDA, I2C_SCL, TP_RST, TP_INT);
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf[2][screenWidth * buf_size];
 
+static lv_style_t background_style;
+static lv_style_t foreground_style;
+
+
 /* ---------------------------------------------------------------------------
 Forward declarations
 --------------------------------------------------------------------------- */
 
+static void drawMainLayout();
+static void setStyles();
 static void onFlushDisplay(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p);
 static void onTouchPadRead(lv_indev_drv_t *indev_driver, lv_indev_data_t *data);
 
@@ -53,9 +59,10 @@ void display_init()
   indev_drv.read_cb = onTouchPadRead;
   lv_indev_drv_register(&indev_drv); 
 
-  lv_obj_t *label = lv_label_create( lv_scr_act() );
-  lv_label_set_text( label, "Display test" );
-  lv_obj_align( label, LV_ALIGN_CENTER, 0, 0 );
+  tft.setBrightness(10);
+
+  setStyles();
+  drawMainLayout();
 }
 
 void display_loop()
@@ -66,6 +73,53 @@ void display_loop()
 /* ---------------------------------------------------------------------------
 Private
 --------------------------------------------------------------------------- */
+
+void configureScreen1(lv_obj_t *parent)
+{
+  lv_obj_t * label = lv_label_create(parent);
+  lv_obj_add_style(label, &foreground_style, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_label_set_text(label, "Screen 1");
+  lv_obj_center(label);
+}
+
+static void value_changed_event_cb(lv_event_t * e)
+{
+  lv_obj_t * arc = lv_event_get_target(e);
+  int value = lv_arc_get_value(arc);
+  tft.setBrightness(value);
+}
+
+void configureScreen2(lv_obj_t *parent)
+{
+
+  lv_obj_t * arc = lv_arc_create(parent);
+  lv_obj_set_size(arc, 150, 150);
+  lv_arc_set_rotation(arc, 135);
+  lv_arc_set_bg_angles(arc, 0, 270);
+  lv_arc_set_value(arc, tft.getBrightness());
+  lv_obj_center(arc);
+  lv_obj_add_event_cb(arc, value_changed_event_cb, LV_EVENT_VALUE_CHANGED, nullptr);
+}
+
+void drawMainLayout()
+{
+  lv_obj_t *tileView = lv_tileview_create(lv_scr_act() );
+  lv_obj_add_style(tileView, &background_style, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_t * tile1 = lv_tileview_add_tile(tileView, 0, 0, LV_DIR_BOTTOM);
+  lv_obj_t * tile2 = lv_tileview_add_tile(tileView, 0, 1, LV_DIR_TOP );
+
+  configureScreen1(tile1);
+  configureScreen2(tile2);
+}
+
+void setStyles()
+{
+  lv_style_init(&background_style);
+  lv_style_set_bg_color(&background_style, lv_color_black());
+ 
+  lv_style_init(&foreground_style);
+  lv_style_set_text_color(&foreground_style, lv_color_white());
+}
 
 void onFlushDisplay(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
